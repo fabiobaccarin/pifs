@@ -1,5 +1,5 @@
 """
-Reproduces the whole analysis for convenience. It also has logging behavior
+Reproduces the whole analysis for convenience
 """
 
 if __name__ == "__main__":
