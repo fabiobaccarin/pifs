@@ -4,6 +4,7 @@ Applies preprocessing to data
 Input: data/data_renamed.pkl
 Outputs:
     - data/X.pkl
+    - data/X_selected.pkl
     - data/y.pkl
 """
 
@@ -25,7 +26,7 @@ def main():
 
     df = pd.read_pickle(paths.RENAMED_DATA)
     features = json.load(paths.FEATURES.open("r"))
-    X = df.filter(features)
+    X = df.drop(["x00", "x85", "x94"], axis=1)
     y = df["x00"].copy()
 
     # Simple transformations -- just enough to address adequately the point of
@@ -39,21 +40,25 @@ def main():
         .pipe(wrap, preprocessing.minmax_scale)
     )
 
+    # Feature selection: see reports/correlation.html
+    X_selected = X.filter(features)
+
     # Sanity checks
     assert isinstance(X, pd.DataFrame)
     assert isinstance(y, pd.Series)
-    assert X.shape[1] == len(features)
-    assert all([x in features for x in X])
+    assert len(X.columns) == len(df.columns) - 3
+    assert X_selected.shape[1] == len(features)
+    assert all([x in features for x in X_selected])
     assert len(X) == len(df)
     assert len(y) == len(df)
     assert y.name == "x00"
-    assert all([X[x].min() == 0 and X[x].max() == 1 for x in X])
     assert not X.isna().any().any()
     assert not y.isna().any()
     assert y.nunique() == 2
 
     # Saving data
     X.to_pickle(paths.DATA.joinpath("X.pkl"))
+    X_selected.to_pickle(paths.DATA.joinpath("X_selected.pkl"))
     y.to_pickle(paths.DATA.joinpath("y.pkl"))
 
     # Profile report on X
